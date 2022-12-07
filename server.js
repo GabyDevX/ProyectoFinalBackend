@@ -1,298 +1,159 @@
-//FILE MANAGMENT
-
-const fs = require('fs')
-
-class Container {
-  constructor(name) {
-    this.name = name
-  }
-
-  async save(obj) {
-    try {
-      const newObject = obj
-      newObject.id = 1
-      //If the file doesn't exist, this take the execution to the catch'
-      let info = await fs.promises.readFile(`./${this.name}.txt`, 'utf-8')
-      if (info !== '') {
-        info = JSON.parse(info)
-        const ids = info.map((el) => el.id)
-        const lastId = Math.max(...ids)
-        newObject.id = lastId === -Infinity ? 1 : lastId + 1
-      } else {
-        info = []
-      }
-      info.push(newObject)
-      await fs.promises.writeFile(
-        `./${this.name}.txt`,
-        JSON.stringify(info, null, 2),
-      )
-      return newObject.id
-    } catch (error) {
-      const newObject = obj
-      newObject.id = 1
-      await fs.promises.writeFile(
-        `./${this.name}.txt`,
-        JSON.stringify([newObject], null, 2),
-      )
-      return newObject.id
-    }
-  }
-
-  async getById(id) {
-    try {
-      //If the file doesn't exist, this take the execution to the catch'
-      let info = await fs.promises.readFile(`./${this.name}.txt`, 'utf-8')
-      if (info !== '') {
-        info = JSON.parse(info)
-        const item = info.find((el) => el.id === id) || null
-        return item
-        // !== null ? item : 'The object does not exist'
-      } else {
-        return 'The file is empty'
-      }
-    } catch (error) {
-      return 'The file does not exist'
-    }
-  }
-
-  async getAll() {
-    try {
-      //If the file doesn't exist, this take the execution to the catch'
-      let info = await fs.promises.readFile(`./${this.name}.txt`, 'utf-8')
-      if (info !== '') {
-        return JSON.parse(info)
-      } else {
-        return 'The file is empty'
-      }
-    } catch (error) {
-      //   return 'The file does not exist or contains invalid data'
-      await fs.promises.writeFile(
-        `./${this.name}.txt`,
-        JSON.stringify([], null, 2),
-      )
-    }
-  }
-
-  async deleteById(id) {
-    try {
-      //If the file doesn't exist, this take the execution to the catch'
-      let info = await fs.promises.readFile(`./${this.name}.txt`, 'utf-8')
-      if (info !== '') {
-        info = JSON.parse(info)
-        if (info.find((el) => el.id === id) === undefined) {
-          console.log(`The object with the id: ${id}, doesn't exist`)
-          return
-        }
-        const newList = info.filter((el) => el.id !== id)
-        await fs.promises.writeFile(
-          `./${this.name}.txt`,
-          JSON.stringify(newList, null, 2),
-        )
-        console.log(`The object with the id: ${id}, has been deleted`)
-      } else {
-        console.log('The file is empty')
-      }
-    } catch (error) {
-      console.log('The file does not exist')
-    }
-  }
-
-  async deleteAll() {
-    try {
-      //If the file doesn't exist, this take the execution to the catch'
-      await fs.promises.readFile(`./${this.name}.txt`)
-      await fs.promises.writeFile(`./${this.name}.txt`, '')
-      console.log('All the objects have been deleted successfully')
-    } catch (error) {
-      console.log(`The file with the name: ${this.name}.txt, doesn't exist`)
-    }
-  }
-}
-
-const carritoArchivo = new Container('carritosArchivo')
-mensajesArchivo.getAll()
-
-const productosArchivo = new Container('productosArchivo')
-productosArchivo.getAll()
-
-//SERVIDOR
-
 const express = require('express')
-const { ROUTER } = express
-
 const app = express()
+const Contenedor = require('./controller/contenedor')
+const routes = require('./routes/index.js');
+// const contenedor = new Contenedor('./files/productos', [
+//   'timestamp',
+//   'title',
+//   'price',
+//   'description',
+//   'code',
+//   'image',
+//   'stock',
+// ])
+// const carrito = new Contenedor('./files/carrito', ['timestamp', 'products'])
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
-app.use('/static', express.static('public'))
 
-const routerProductos = new Router()
-const routerCarrito = new Router()
+// const routerProducts = express.Router()
+// const routerCart = express.Router()
 
-const administrador = true
+// app.use('/api/productos', routerProducts)
+// app.use('/api/carrito', routerCart)
 
-let productos = [
-  // {
-  //     id: 1,
-  //     timestamp: '2323423',
-  //     nombre: 'nombre',
-  //     descripcion: 'descripcion',
-  //     codigo: 'codigo',
-  //     foto: 'url',
-  //     precio: 1,
-  //     stock: 1
-  // }
-]
+app.use('/', routes);
 
-let carrito = [
-  //   {
-  //     id: 1,
-  //     timestamp: '2323423',
-  //     productos: [
-  //       {
-  //         id: 1,
-  //         timestamp: '2323423',
-  //         nombre: 'nombre',
-  //         descripcion: 'descripcion',
-  //         codigo: 'codigo',
-  //         foto: 'url',
-  //         precio: 1,
-  //         stock: 1,
-  //       },
-  //     ],
-  //   },
-]
+// /* ------------------------ Product Endpoints ------------------------ */
 
-const traerMensajes = async () => {
-  carrito = await carritoArchivo.getAll()
-}
+// // GET api/productos
+// routerProducts.get('/:id?', async (req, res) => {
+//   const { id } = req.params
+//   if (id) {
+//     const product = await contenedor.getById(id)
 
-const traerProductos = async () => {
-  productos = await productosArchivo.getAll()
-}
+//     product
+//       ? res.status(200).json(product)
+//       : res.status(400).json({ error: 'product not found' })
+//   } else {
+//     const products = await contenedor.getAll()
+//     res.status(200).json(products)
+//   }
+// })
 
-//PERSISTIR CON FILE SYSTEM
+// // POST api/productos
+// routerProducts.post('/', async (req, res, next) => {
+//   const { body } = req
 
-//PRODUCTOS
+//   body.timestamp = Date.now()
 
-//GET /:id
-routerProductos.get('/:id?', (req, res) => {
-  //!ID ? TODOS : UNO
-  const id = req.params.id
-  console.log(id)
-  const item = productos.find((el) => el.id === Number(id)) || null
-  item != null ? res.json(item) : res.json({ error: 'producto no encontrado' })
-})
+//   const newProductId = await contenedor.save(body)
 
-//POST
-routerProductos.post('/', (req, res) => {
-  const newProduct = req.body
-  const ids = productos.map((el) => el.id)
-  const lastId = Math.max(...ids)
-  newProduct.id = lastId === -Infinity ? 1 : lastId + 1
-  productos.push(newProduct)
-  res.json({ ok: 'ok' })
-})
+//   newProductId
+//     ? res
+//         .status(200)
+//         .json({ success: 'product added with ID: ' + newProductId })
+//     : res
+//         .status(400)
+//         .json({ error: 'invalid key. Please verify the body content' })
+// })
 
-// PUT /:id
-routerProductos.put('/:id', (req, res) => {
-  const id = Number(req.params.id)
-  const newPersona = req.body
-  newPersona.id = id
-  const item = productos.find((el) => el.id === id) || null
-  if (item != null) {
-    const index = productos.indexOf(item)
-    productos[index] = newPersona
-    res.json({ ok: 'ok' })
-  } else {
-    res.json({ error: 'producto no encontrado' })
-  }
-})
+// // PUT api/productos/:id
+// routerProducts.put('/:id', async (req, res, next) => {
+//   const { id } = req.params
+//   const { body } = req
+//   const wasUpdated = await contenedor.updateById(id, body)
 
-// DELETE /:id
-routerProductos.delete('/:id', (req, res) => {
-  const id = req.params.id
-  const newProducts = productos.filter((p) => p.id !== Number(id))
-  productos = newProducts
-  res.json({ ok: 'ok' })
-})
+//   wasUpdated
+//     ? res.status(200).json({ success: 'product updated' })
+//     : res.status(404).json({ error: 'product not found' })
+// })
 
-//CARRITO
+// // DELETE /api/productos/:id
+// routerProducts.delete('/:id', async (req, res, next) => {
+//   const { id } = req.params
+//   const wasDeleted = await contenedor.deleteById(id)
 
-//POST
-routerCarrito.post('/', (req, res) => {
-  const newCarrito = req.body
-  const ids = carrito.map((el) => el.id)
-  const lastId = Math.max(...ids)
-  newCarrito.id = lastId === -Infinity ? 1 : lastId + 1
-  carrito.push(newCarrito)
-  res.json({ ok: 'ok' })
-  return newCarrito.id
-})
+//   wasDeleted
+//     ? res.status(200).json({ success: 'product successfully removed' })
+//     : res.status(404).json({ error: 'product not found' })
+// })
 
-// DELETE /:id
-routerCarrito.delete('/:id', (req, res) => {
-  //Vacia y elimina
-  const id = req.params.id
-  const newProducts = productos.filter((p) => p.id !== Number(id))
-  productos = newProducts
-  res.json({ ok: 'ok' })
-})
+// /* ------------------------ Cart Endpoints ------------------------ */
 
-//GET /:id
-routerCarrito.get('/:id/productos', (req, res) => {
-  //Todos los productos dentro del carrito
-  const id = req.params.id
-  console.log(id)
-  const item = productos.find((el) => el.id === Number(id)) || null
-  item != null
-    ? res.json(item.productos)
-    : res.json({ error: 'carrito no encontrado' })
-})
+// // POST /api/carrito
 
-//POST PARA PROBAR
-routerCarrito.post('/:id/productos/:id_prod', (req, res) => {
-  //Insert en el carrito id
-  const id = Number(req.params.id)
-  const id_prod = Number(req.params.id_prod)
-  const itemCarrito = carrito.find((el) => el.id === id) || null
-  const itemProducto = productos.find((el) => el.id === id_prod) || null
-  if (itemCarrito != null) {
-    const index = carrito.indexOf(itemCarrito)
-    if (itemProducto != null) {
-      carrito[index].productos.push(itemProducto)
-    } else {
-      res.json({ error: 'producto no encontrado' })
-    }
-  } else {
-    res.json({ error: 'carrito no encontrado' })
-  }
-  res.json({ ok: 'ok' })
-})
+// routerCart.post('/', async (req, res) => {
+//   const { body } = req
 
-// DELETE PARA PROBAR
-routerCarrito.delete('/:id/productos/:id_prod', (req, res) => {
-  //Elimina un producto por su id que este dentro del carrito id
-  const id = Number(req.params.id)
-  const id_prod = Number(req.params.id_prod)
-  const itemCarrito = carrito.find((el) => el.id === id) || null
-  if (itemCarrito != null) {
-    const index = carrito.indexOf(itemCarrito)
-    const newList = itemCarrito[index].productos.filter(
-      (el) => el.id !== id_prod,
-    )
-    carrito[index].productos = newList
-  } else {
-    res.json({ error: 'carrito no encontrado' })
-  }
-  res.json({ ok: 'ok' })
-})
+//   body.timestamp = Date.now()
+//   body.products = []
+//   const newCartId = await carrito.save(body)
 
-app.use('api/productos', routerProductos)
-app.use('api/carrito', routerCarrito)
+//   newCartId
+//     ? res.status(200).json({ success: 'cart added with ID: ' + newCartId })
+//     : res
+//         .status(400)
+//         .json({ error: 'invalid key. Please verify the body content' })
+// })
 
-const PORT = process.env.PORT || 8080
+// // DELETE /api/carrito/id
+// routerCart.delete('/:id', async (req, res) => {
+//   const { id } = req.params
+//   const wasDeleted = await carrito.deleteById(id)
 
-app.listen(PORT, () => {
-  console.log(`Servidor escuchando en el puerto ${PORT}`)
+//   wasDeleted
+//     ? res.status(200).json({ success: 'cart successfully removed' })
+//     : res.status(404).json({ error: 'cart not found' })
+// })
+
+// // POST /api/carrito/:id/productos
+// routerCart.post('/:id/productos/:id_prod', async (req, res) => {
+//   const { id, id_prod } = req.params
+  
+//   const product = await contenedor.getById(id_prod)
+
+//   if (product) {
+//     const cartExist = await carrito.addToArrayById(id, { products: product })
+//     cartExist
+//       ? res.status(200).json({ success: 'product added' })
+//       : res.status(404).json({ error: 'cart not found' })
+//   } else {
+//     res.status(404).json({
+//       error: 'product not found, verify the ID in the body content is correct.',
+//     })
+//   }
+// })
+
+// // GET /api/carrito/:id/productos
+// routerCart.get('/:id/productos', async (req, res) => {
+//   const { id } = req.params
+//   const cart = await carrito.getById(id)
+
+//   cart
+//     ? res.status(200).json(cart.products)
+//     : res.status(404).json({ error: 'cart not found' })
+// })
+
+// // DELETE /api/carrito/:id/productos/:id_prod
+// routerCart.delete('/:id/productos/:id_prod', async (req, res) => {
+//   const { id, id_prod } = req.params
+//   const productExists = await contenedor.getById(id_prod)
+//   if (productExists) {
+//     const cartExists = await carrito.removeFromArrayById(
+//       id,
+//       id_prod,
+//       'products',
+//     )
+//     cartExists
+//       ? res.status(200).json({ success: 'product removed' })
+//       : res.status(404).json({ error: 'cart not found' })
+//   } else {
+//     res.status(404).json({ error: 'product not found' })
+//   }
+// })
+
+const PORT = 8080
+const server = app.listen(PORT, () => {
+  console.log(` >>>>> 🚀 Server started at http://localhost:${PORT}`)
 })
