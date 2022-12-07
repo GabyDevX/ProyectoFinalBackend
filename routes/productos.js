@@ -12,7 +12,7 @@ const contenedor = new Contenedor('./files/productos', [
 
 const router = Router()
 
-const admin = false
+const admin = true
 
 /* ------------------------ Product Endpoints ------------------------ */
 
