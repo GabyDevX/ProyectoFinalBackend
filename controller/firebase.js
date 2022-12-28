@@ -8,126 +8,172 @@ class Firebase {
         this.queryCar = db.collection('carritos')
     }
 
-    static async connect() {
+    async getById(id, tipo = this.type) {
 
-    }
+        try {
 
-    async getById(id) {
+            if(tipo == "producto"){
+    
+                const doc = this.queryProd.doc(`${id}`)
+    
+                const item = await doc.get()
+    
+                const response = item.data()
 
-        if(this.type == "producto"){
-
-            const doc = this.queryProd.doc(`${id}`)
-
-            const item = await doc.get()
-
-            const response = item.data()
-
-            console.log(response);
-        
-        } else {
-
-            const doc = this.queryCar.doc(`${id}`)
-
-            const item = await doc.get()
-
-            const response = item.data()
-
-            console.log(response);
+                return response
+            
+            } else {
+    
+                const doc = this.queryCar.doc(`${id}`)
+    
+                const item = await doc.get()
+    
+                const response = item.data()
+    
+                return response
+            }
+            
+        } catch (error) {
+            console.log(error);
         }
+
         
     }
 
     async deleteById(id) {
 
-        if(this.type == "producto"){
+        try {
+            
+            if(this.type == "producto"){
+    
+                const doc = this.queryProd.doc(`${id}`)
+    
+                const item = await doc.get()
+                
+                const response = item.data()
+                
+                await doc.delete()
+                
+                return response
+            
+            } else {
+    
+                const doc = this.queryCar.doc(`${id}`)
+    
+                const item = await doc.get()
+                
+                const response = item.data()
+                
+                await doc.delete()
+                
+                return response
+    
+            }
 
-            const doc = this.queryProd.doc(`${id}`)
-
-            
-            const item = await doc.get()
-            
-            const response = item.data()
-            
-            await doc.delete()
-            console.log('Se ha eliminado el siguiente producto');
-            console.log(response);
-        
-        } else {
-
-            const doc = this.queryCar.doc(`${id}`)
-
-            
-            const item = await doc.get()
-            
-            const response = item.data()
-            
-            await doc.delete()
-            console.log('Se ha eliminado el siguiente carrito');
-            console.log(response);
-
+        } catch (error) {
+            console.log(error);
         }
+
         
     }
 
     async updateById(id, newData) {
 
-         if(this.type == "producto"){
-
-            const doc = this.queryProd.doc(`${id}`)
-
-            const item = await doc.update(newData)
+        try {
             
-            console.log('El producto se ha actualizado correctamente');
-        
-        } else {
+            if(this.type == "producto"){
+    
+               const doc = this.queryProd.doc(`${id}`)
+    
+               const item = await doc.update(newData)
+               
+               return item
+           
+           } else {
+    
+               const doc = this.queryCar.doc(`${id}`)
+               
+               const item = await doc.update(newData)
+    
+               return item
+    
+           }
 
-            const doc = this.queryCar.doc(`${id}`)
-            
-            const item = await doc.update(newData)
-
-            console.log('El carrito se ha actualizado correctamente');
-
+        } catch (error) {
+            console.log(error);
         }
+
         
     }
 
-    async addToArrayById(id, objectToAdd) {
-        
+    async addToArrayById(id, objectToAddId) {
+        try {
+            const doc = this.queryCar.doc(`${id}`)
+    
+            const item = await doc.get()
+    
+            const carrito = item.data()
+
+            const docProd = this.queryProd.doc(`${objectToAddId}`)
+    
+            const itemProd = await docProd.get()
+
+            const producto = itemProd.data()
+
+            producto.id = objectToAddId
+
+            carrito.products.push(producto)
+    
+            const updated = await doc.update(carrito)
+            
+            console.log(carrito);
+
+            return updated
+
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     async removeFromArrayById(id, objectToRemoveId, keyName) {
+        const doc = this.queryCar.doc(`${id}`)
+    
+        const item = await doc.get()
+
+        const carrito = item.data()
+
+        carrito.products = carrito.products.filter(e => e.id !== objectToRemoveId)
+
+        const updated = await doc.update(carrito)
+            
+        console.log(carrito);
+
+        return updated
 
     }
 
     async save(object) {
 
-        if(this.type == "producto"){
-
-            const doc = this.queryProd.doc()
+        try {
             
-            const data = await doc.create(object)
-
-            console.log(doc);
-            console.log(data);
-        
-        } else {
-
-            const doc = this.queryCar.doc()
+            if(this.type == "producto"){
+    
+                const data = await this.queryProd.add(object)
+    
+                return data.id
             
-            const data = await doc.create(object)
+            } else {
+                
+                const data = await this.queryCar.add(object)
+    
+                return data.id
+    
+            }
 
-            console.log(doc);
-            console.log(data);
-
+        } catch (error) {
+            console.log(error);
         }
-        
-    }
 
-    async deleteAll() {
-
-    }
-
-    async getData() {
         
     }
 }

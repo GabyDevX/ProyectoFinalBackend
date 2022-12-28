@@ -1,20 +1,21 @@
 import { Router } from 'express'
-import {Container} from '../controller/contenedor.js'
-const contenedor = new Container('./files/productos', [
-  'title',
-  'price',
-  'description',
-  'code',
-  'image',
-  'stock',
-  'timestamp',
-])
 
-import {MongoDB} from '../controller/mongo.js'
-const db = new MongoDB('mongodb+srv://coderhouse:coderhouse@cluster0.6zhqh8c.mongodb.net/?retryWrites=true&w=majority', 'producto') 
+// import {Container} from '../controller/contenedor.js'
+// const contenedor = new Container('./files/productos', [
+//   'title',
+//   'price',
+//   'description',
+//   'code',
+//   'image',
+//   'stock',
+//   'timestamp',
+// ])
 
 import {FirebaseDB} from '../controller/firebase.js'
 const fb = new FirebaseDB('producto')
+
+import {MongoDB} from '../controller/mongo.js'
+const db = new MongoDB('mongodb+srv://coderhouse:coderhouse@cluster0.6zhqh8c.mongodb.net/?retryWrites=true&w=majority', 'producto') 
 
 const router = Router()
 
@@ -26,16 +27,18 @@ const admin = true
 router.get('/:id?', async (req, res) => {
   const { id } = req.params
   if (id) {
-    const product = await contenedor.getById(id)
-    // const productMongo = await db.getById(id)
-    const productFirebase = await fb.getById(id)
+    // const product = await contenedor.getById(id)
+    // const product = await fb.getById(id)
+    const product = await db.getById(id)
 
     product
       ? res.status(200).json(product)
       : res.status(400).json({ error: 'product not found' })
   } else {
-    const products = await contenedor.getAll()
-    res.status(200).json(products)
+    // const products = await contenedor.getAll()
+    //work
+    res.status(200)
+    // res.status(200).json(products)
   }
 })
 
@@ -45,10 +48,10 @@ router.post('/', async (req, res, next) => {
     const { body } = req
 
     body.timestamp = new Date().toLocaleString()
-    console.log(body);
-    const newProductId = await contenedor.save(body)
-    const newProductIdMongo = await db.save(body)
-    const newProductIdFirebase = await fb.save(body)
+
+    // const newProductId = await contenedor.save(body)
+    // const newProductId = await fb.save(body)
+    const newProductId = await db.save(body)
 
     newProductId
       ? res
@@ -70,9 +73,10 @@ router.put('/:id', async (req, res, next) => {
   if (admin) {
     const { id } = req.params
     const { body } = req
-    const wasUpdated = await contenedor.updateById(id, body)
-    // const wasUpdatedMongo = await db.updateById(id, body)
-    const wasUpdatedFirebase = await fb.updateById(id, body)
+
+    // const wasUpdated = await contenedor.updateById(id, body)
+    // const wasUpdated = await fb.updateById(id, body)
+    const wasUpdated = await db.updateById(id, body)
 
 
     wasUpdated
@@ -90,9 +94,9 @@ router.put('/:id', async (req, res, next) => {
 router.delete('/:id', async (req, res, next) => {
   if (admin) {
     const { id } = req.params
-    const wasDeleted = await contenedor.deleteById(id)
-    // const wasDeletedMongo = await db.deleteById(id)
-    const wasDeletedFirebase = await fb.deleteById(id)
+    // const wasDeleted = await contenedor.deleteById(id)
+    // const wasDeleted = await fb.deleteById(id)
+    const wasDeleted = await db.deleteById(id)
 
     wasDeleted
       ? res.status(200).json({ success: 'product successfully removed' })
