@@ -1,14 +1,20 @@
-const { Router } = require('express')
-const Contenedor = require('../controller/contenedor')
-const contenedor = new Contenedor('./files/productos', [
-  'timestamp',
+import { Router } from 'express'
+import {Container} from '../controller/contenedor.js'
+const contenedor = new Container('./files/productos', [
   'title',
   'price',
   'description',
   'code',
   'image',
   'stock',
+  'timestamp',
 ])
+
+import {MongoDB} from '../controller/mongo.js'
+const db = new MongoDB('mongodb+srv://coderhouse:coderhouse@cluster0.6zhqh8c.mongodb.net/?retryWrites=true&w=majority', 'producto') 
+
+import {FirebaseDB} from '../controller/firebase.js'
+const fb = new FirebaseDB('producto')
 
 const router = Router()
 
@@ -21,6 +27,8 @@ router.get('/:id?', async (req, res) => {
   const { id } = req.params
   if (id) {
     const product = await contenedor.getById(id)
+    // const productMongo = await db.getById(id)
+    const productFirebase = await fb.getById(id)
 
     product
       ? res.status(200).json(product)
@@ -36,9 +44,11 @@ router.post('/', async (req, res, next) => {
   if (admin) {
     const { body } = req
 
-    body.timestamp = Date.now()
-
+    body.timestamp = new Date().toLocaleString()
+    console.log(body);
     const newProductId = await contenedor.save(body)
+    const newProductIdMongo = await db.save(body)
+    const newProductIdFirebase = await fb.save(body)
 
     newProductId
       ? res
@@ -61,6 +71,9 @@ router.put('/:id', async (req, res, next) => {
     const { id } = req.params
     const { body } = req
     const wasUpdated = await contenedor.updateById(id, body)
+    // const wasUpdatedMongo = await db.updateById(id, body)
+    const wasUpdatedFirebase = await fb.updateById(id, body)
+
 
     wasUpdated
       ? res.status(200).json({ success: 'product updated' })
@@ -78,6 +91,8 @@ router.delete('/:id', async (req, res, next) => {
   if (admin) {
     const { id } = req.params
     const wasDeleted = await contenedor.deleteById(id)
+    // const wasDeletedMongo = await db.deleteById(id)
+    const wasDeletedFirebase = await fb.deleteById(id)
 
     wasDeleted
       ? res.status(200).json({ success: 'product successfully removed' })
@@ -90,4 +105,4 @@ router.delete('/:id', async (req, res, next) => {
   }
 })
 
-module.exports = router
+export const ProductosRoutes = router

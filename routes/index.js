@@ -1,8 +1,10 @@
-const { Router } = require('express');
+import { Router } from 'express'
 // Importar todos los routers;
-const CarritoRoutes = require('./carrito');
-const ProductosRoutes = require('./productos');
-
+import {CarritoRoutes} from './carrito.js'
+import {ProductosRoutes} from './productos.js'
+// Inicializar Firebase una vez
+// import {FirebaseDB} from './../controller/firebase.js'
+// FirebaseDB.connect()
 
 const router = Router();
 
@@ -11,4 +13,4 @@ router.use('/api/carrito', CarritoRoutes);
 router.use('/api/productos', ProductosRoutes);
 
 
-module.exports = router;
+export const routes = router;
